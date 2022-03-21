@@ -1,7 +1,7 @@
 import requests
 from attrs import define
 import pytest
-from eve_utils import __version__
+
 from eve_utils.EveUtils import EveUtils
 
 
@@ -58,10 +58,6 @@ def region_id():
 
 
 eu = EveUtils()
-
-
-def test_version():
-    assert __version__ == "0.1.0"
 
 
 def test_find_id_from_system(system_name):
