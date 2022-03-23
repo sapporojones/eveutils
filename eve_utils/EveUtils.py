@@ -1,6 +1,6 @@
 from black import out
 import requests
-from attrs import define
+
 
 # if at work use proxies:
 import os
@@ -9,21 +9,26 @@ os.environ["HTTP_PROXY"] = "http://proxy.jf.intel.com:911"
 os.environ["HTTPS_PROXY"] = "http://proxy.jf.intel.com:912"
 
 
-@define
 class EveUtils:
-    char_name: str = ""
-    char_id: str = ""
-    corp_id: str = ""
-    alliance_id: str = ""
-    system_id: str = ""
-    system_name: str = ""
-    item_id: str = ""
-    item_name: str = ""
-    region_id: str = ""
-    type_id: str = ""
-    system_jumps: int = 0
+    def __init__(self):
+        char_name: str = ""
+        char_id: str = ""
+        corp_id: str = ""
+        alliance_id: str = ""
+        system_id: str = ""
+        system_name: str = ""
+        item_id: str = ""
+        item_name: str = ""
+        region_id: str = ""
+        type_id: str = ""
+        system_jumps: int = 0
 
     def find_id_from_system(self, name):
+        """
+        Takes the name of a system and attempts to return the id
+        :param name: The name of a system
+        :return: the string value of the systemID
+        """
         url_string = f"https://esi.evetech.net/latest/search/?categories=solar_system&datasource=tranquility&language=en-us&search={name}&strict=true"
         id_request = requests.get(url_string)
         id_request_json = id_request.json()
@@ -32,6 +37,11 @@ class EveUtils:
         return str(system_id)
 
     def find_system_from_id(self, id):
+        """
+        Returns system name from a provided id
+        :param id:
+        :return string containing name of a system:
+        """
         url_string = f"https://esi.evetech.net/latest/universe/systems/{id}/?datasource=tranquility&language=en-us"
         id_request = requests.get(url_string)
         id_request_json = id_request.json()
@@ -55,6 +65,11 @@ class EveUtils:
         return sysjumps
 
     def get_character_id(self, character_name):
+        """
+        Takes the name of a character and attempts to determine and return the id of that character
+        :param character_name: a string value representing the name of the corp
+        :return: the id of the corporation in string form
+        """
         char_srch = requests.get(
             f"https://esi.evetech.net/latest/search/?categories=character&datasource=tranquility"
             f"&language=en&search={character_name}&strict=true"
@@ -70,6 +85,11 @@ class EveUtils:
         return character_id
 
     def get_corp_id(self, corporation_name):
+        """
+        Takes a string value of a corporation name and attempts to determine and return the id of that corporation
+        :param corporation_name: the string value of the name of the corp
+        :return: the string representation of the id of the corp
+        """
         corp_srch = requests.get(
             f"https://esi.evetech.net/latest/search/?categories=corporation&datasource=tranquility"
             f"&language=en&search={corporation_name}&strict=true"
@@ -84,6 +104,11 @@ class EveUtils:
         return corp_id
 
     def get_alliance_id(self, alice_name):
+        """
+        Takes the name of an alliance and attempts to determine and return the id of that alliance
+        :param alice_name: a string value representing the name of an alliance
+        :return: a string representation of the id of the alliance
+        """
         alice_srch = requests.get(
             f"https://esi.evetech.net/latest/search/?categories=alliance&datasource=tranquility"
             f"&language=en&search={alice_name}&strict=true"
@@ -97,6 +122,11 @@ class EveUtils:
         return alice_id
 
     def get_item_name(self, id):
+        """
+        Takes the id of an item and returns the name of that item
+        :param id: the numeric item id to be passed to the api
+        :return: a string representation of the name of the item
+        """
         esi_route = f"https://esi.evetech.net/latest/universe/types/{id}/?datasource=tranquility&language=en"
         esi_resp = requests.get(esi_route)
         esi_json = esi_resp.json()
@@ -105,6 +135,11 @@ class EveUtils:
         return name
 
     def get_region_id(self, sysid):
+        """
+        Given a systemid return the id of the region that contains it
+        :param sysid:
+        :return string containing the id of the region:
+        """
         system_route = f"https://esi.evetech.net/latest/universe/systems/{sysid}/?datasource=tranquility&language=en"
         system_resp = requests.get(system_route)
         system_json = system_resp.json()
@@ -118,6 +153,11 @@ class EveUtils:
         return region_id
 
     def get_item_id(self, item_name):
+        """
+        Returns the item id for a given item
+        :param item_name:
+        :return item_id:
+        """
         item_id_get = requests.get(
             "https://esi.evetech.net/latest/search/",
             params={
