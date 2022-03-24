@@ -1,12 +1,17 @@
-from black import out
-import requests
-
+import urllib3
+import json
 
 # if at work use proxies:
 import os
 
 os.environ["HTTP_PROXY"] = "http://proxy.jf.intel.com:911"
 os.environ["HTTPS_PROXY"] = "http://proxy.jf.intel.com:912"
+
+http = urllib3.ProxyManager("http://proxy.jf.intel.com:911")
+
+# else
+
+# http = urllib3.PoolManager()
 
 
 class EveUtils:
@@ -30,8 +35,10 @@ class EveUtils:
         :return: the string value of the systemID
         """
         url_string = f"https://esi.evetech.net/latest/search/?categories=solar_system&datasource=tranquility&language=en-us&search={name}&strict=true"
-        id_request = requests.get(url_string)
-        id_request_json = id_request.json()
+        id_request = http.request(
+            "GET", url_string
+        )  # id_request = requests.get(url_string)
+        id_request_json = json.loads(id_request.data)  # id_request.json()
         system_id = id_request_json["solar_system"][0]
         self.system_id = str(system_id)
         return str(system_id)
@@ -43,8 +50,8 @@ class EveUtils:
         :return string containing name of a system:
         """
         url_string = f"https://esi.evetech.net/latest/universe/systems/{id}/?datasource=tranquility&language=en-us"
-        id_request = requests.get(url_string)
-        id_request_json = id_request.json()
+        id_request = http.request("GET", url_string)
+        id_request_json = json.loads(id_request.data)  # id_request.json()
         system_name = id_request_json["name"]
         self.system_name = system_name
         return system_name
@@ -56,8 +63,8 @@ class EveUtils:
         :return: Returns integer number of jumps for specified system
         """
         base_url = "https://esi.evetech.net/latest/universe/system_jumps/?datasource=tranquility"
-        ret_obj = requests.get(base_url)
-        ret_json = ret_obj.json()
+        ret_obj = http.request("GET", base_url)
+        ret_json = json.loads(ret_obj.data)
         for i in ret_json:
             if str(i["system_id"]) == str(sysid):
                 sysjumps = i["ship_jumps"]
@@ -70,11 +77,12 @@ class EveUtils:
         :param character_name: a string value representing the name of the corp
         :return: the id of the corporation in string form
         """
-        char_srch = requests.get(
+        char_srch = http.request(
+            "GET",
             f"https://esi.evetech.net/latest/search/?categories=character&datasource=tranquility"
-            f"&language=en&search={character_name}&strict=true"
+            f"&language=en&search={character_name}&strict=true",
         )
-        char_srch_json = char_srch.json()
+        char_srch_json = json.loads(char_srch.data)
         if len(char_srch_json) <= 0:
             raise Exception("Character not found")
         else:
@@ -90,11 +98,12 @@ class EveUtils:
         :param corporation_name: the string value of the name of the corp
         :return: the string representation of the id of the corp
         """
-        corp_srch = requests.get(
+        corp_srch = http.request(
+            "GET",
             f"https://esi.evetech.net/latest/search/?categories=corporation&datasource=tranquility"
-            f"&language=en&search={corporation_name}&strict=true"
+            f"&language=en&search={corporation_name}&strict=true",
         )
-        corp_srch_json = corp_srch.json()
+        corp_srch_json = json.loads(corp_srch.data)
         if len(corp_srch_json) <= 0:
             raise Exception("Corporation not found")
         else:
@@ -109,11 +118,12 @@ class EveUtils:
         :param alice_name: a string value representing the name of an alliance
         :return: a string representation of the id of the alliance
         """
-        alice_srch = requests.get(
+        alice_srch = http.request(
+            "GET",
             f"https://esi.evetech.net/latest/search/?categories=alliance&datasource=tranquility"
-            f"&language=en&search={alice_name}&strict=true"
+            f"&language=en&search={alice_name}&strict=true",
         )
-        alice_srch_json = alice_srch.json()
+        alice_srch_json = json.loads(alice_srch.data)
         if len(alice_srch_json) <= 0:
             raise Exception("Alliance not found")
         else:
@@ -128,8 +138,8 @@ class EveUtils:
         :return: a string representation of the name of the item
         """
         esi_route = f"https://esi.evetech.net/latest/universe/types/{id}/?datasource=tranquility&language=en"
-        esi_resp = requests.get(esi_route)
-        esi_json = esi_resp.json()
+        esi_resp = http.request("GET", esi_route)
+        esi_json = json.loads(esi_resp.data)
         name = str(esi_json["name"])
         self.item_name = name
         return name
@@ -141,13 +151,13 @@ class EveUtils:
         :return string containing the id of the region:
         """
         system_route = f"https://esi.evetech.net/latest/universe/systems/{sysid}/?datasource=tranquility&language=en"
-        system_resp = requests.get(system_route)
-        system_json = system_resp.json()
+        system_resp = http.request("GET", system_route)
+        system_json = json.loads(system_resp.data)
         const_id = system_json["constellation_id"]
 
         region_route = f"https://esi.evetech.net/latest/universe/constellations/{const_id}/?datasource=tranquility&language=en"
-        region_resp = requests.get(region_route)
-        region_json = region_resp.json()
+        region_resp = http.request("GET", region_route)
+        region_json = json.loads(region_resp.data)
         region_id = str(region_json["region_id"])
         self.region_id = region_id
         return region_id
@@ -158,15 +168,11 @@ class EveUtils:
         :param item_name:
         :return item_id:
         """
-        item_id_get = requests.get(
-            "https://esi.evetech.net/latest/search/",
-            params={
-                "categories": "inventory_type",
-                "search": item_name,
-                "strict": True,
-            },
+        item_id_get = http.request(
+            "GET",
+            f"https://esi.evetech.net/latest/search/?categories=inventory_type&datasource=tranquility&language=en&search={item_name}&strict=true",
         )
-        item_id_json = item_id_get.json()
+        item_id_json = json.loads(item_id_get.data)
 
         item_id = item_id_json["inventory_type"]
 
@@ -174,14 +180,25 @@ class EveUtils:
         self.item_id = out_item_id
         return out_item_id
 
-    def num_stargates(self, sys_id):
+    def get_num_stargates(self, sys_id):
         """
         Returns the number of stargates in a specified system.
         :param sys_id: System ID (int) of the designated system to lookup
         :return: integer value of the number of gates in a system.  Will always be >0
         """
         base_url = f"https://esi.evetech.net/latest/universe/systems/{sys_id}/"
-        ret_obj = requests.get(base_url)
-        obj_json = ret_obj.json()
+        ret_obj = http.request("GET", base_url)
+        obj_json = json.loads(ret_obj.data)
         n_gates = len(obj_json["stargates"])
         return n_gates
+
+    def get_plex_prices(self):
+        """method to retrieve plex prices from the Jita 4-4 market"""
+        prices_list = []
+        base_url = "https://esi.evetech.net/latest/markets/10000002/orders/?datasource=tranquility&order_type=sell&page=1&type_id=44992"
+        ret_obj = http.request("GET", base_url)
+        ret_json = json.loads(ret_obj.data)
+        for order in ret_json:
+            prices_list.append(order["price"])
+        lowest_jsv = min(prices_list)
+        return lowest_jsv
