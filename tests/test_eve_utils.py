@@ -108,6 +108,11 @@ def test_get_region_id(system_id):
     assert x == "10000002"
 
 
-def test_num_stargates(system_id):
-    x = eu.num_stargates(system_id)
+def test_get_num_stargates(system_id):
+    x = eu.get_num_stargates(system_id)
     assert x >= 1
+
+
+def test_get_plex_prices():
+    x = eu.get_plex_prices()
+    assert x > 0  # plex prices will never be zero so this should never be none or zero
