@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from black import out
 import requests
 import os
